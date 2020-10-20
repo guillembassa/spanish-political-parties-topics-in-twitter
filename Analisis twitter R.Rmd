@@ -1,0 +1,54 @@
+---
+title: "Spanish Political Parties in twitter"
+author: "Guillem Bassa"
+date: "19/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+```{r}
+pacman::p_load(remotes,httpuv, rtweet, tidyverse )
+
+```
+For this study we will check the different spanish political parties with representation twitter account's and from them extract the information about the topics that they use the most.
+First of all, we need to get the data, so we get the timeline of all the parties.
+
+```{r}
+parties_usernames <- c("ciudadanoscs",)
+data_parties <- get_timelines(parties_usernames, n = 100000, parse =  )
+cs <- get_timeline("ciudadanoscs", n= 10000)
+psoe <- get_timeline("")
+pp <- get_timeline("")
+podemos <- get_timeline("")
+erc <-  get_timeline("")
+jxcat <-  get_timeline("")
+cup <-  get_timeline("")
+vox <- get_timeline("")
+bildu <- get_timeline("")
+pnv <- get_timeline("")
+maspais <- get_timeline("")
+cc-nc <- get_timeline("")
+teruelexiste <- get_timeline("")
+bng <- get_timeline("")
+prc <- get_timeline("")
+
+```
+
+With the data we can now check for the most used words for every party
+
+```{r}
+pacman::p_load(quanteda)
+glimpse(cs)
+ts_plot(dplyr::group_by(cs, is_retweet), "weeks")
+
+
+
+
+freq_cs <- textstat_frequency(dfm, n = 5, groups = docvars(dfm, 'Usuario'))
+head(freq, 20)
+
+```
+
