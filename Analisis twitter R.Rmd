@@ -17,23 +17,24 @@ For this study we will check the different spanish political parties with repres
 First of all, we need to get the data, so we get the timeline of all the parties.
 
 ```{r}
-parties_usernames <- c("ciudadanoscs",)
-data_parties <- get_timelines(parties_usernames, n = 100000, parse =  )
-cs <- get_timeline("ciudadanoscs", n= 10000)
-psoe <- get_timeline("")
-pp <- get_timeline("")
-podemos <- get_timeline("")
-erc <-  get_timeline("")
-jxcat <-  get_timeline("")
-cup <-  get_timeline("")
-vox <- get_timeline("")
-bildu <- get_timeline("")
-pnv <- get_timeline("")
-maspais <- get_timeline("")
-cc-nc <- get_timeline("")
-teruelexiste <- get_timeline("")
-bng <- get_timeline("")
-prc <- get_timeline("")
+parties_usernames <- c("ciudadanoscs","psoe", "populares","podemos","esquerra_erc", "juntsxcat", "cupnacional", "vox_es", "ehbildubizkaia", "eajpnv_congreso", "maspais_es", "coalicion", "teruelexiste_", "oloque", "prcantabria")
+
+#data_parties <- get_timelines(parties_usernames, n = 3200 )
+#save_as_csv(data_parties, "C:/Users/Guillem/Documents/GitHub/spanish-political-parties-topics-in-twitter/database.csv")
+data_parties <-read.csv("database.csv", fileEncoding = "UTF-8")
+```
+
+
+```{r}
+library(stringr)
+
+DATAPROVA <- data_parties
+DATAPROVA <- DATAPROVA %>%
+  mutate(created_at = as.character(created_at))%>%
+  separate(created_at,c("Date","Hour"),  " ", remove = FALSE)
+DATAPROVA <- DATAPROVA %>% 
+  mutate(Date = as.Date(Date)) %>% 
+  filter(Date > "2020-09-19")
 
 ```
 
@@ -41,14 +42,45 @@ With the data we can now check for the most used words for every party
 
 ```{r}
 pacman::p_load(quanteda)
-glimpse(cs)
-ts_plot(dplyr::group_by(cs, is_retweet), "weeks")
+
+#see who twits the most by weeks
+
+ts_plot(dplyr::group_by(DATAPROVA, screen_name), "weeks" )
+
+```
+```{r}
+DATAPROVA2 <- DATAPROVA%>%
+  group_by(screen_name, is_retweet) %>%
+  summarize(n=n())%>%
+  mutate(prop=n/sum(n))%>%
+  subset(select=c("screen_name","is_retweet","prop"))%>%
+  spread(screen_name, prop)  
+
+# 4. Eliminación de ruido - Objetos particulares de Twitter que no son texto 
+DATAPROVA$ctext <- gsub("\\@[a-zA-Z0-9_\\.]+", "", DATAPROVA$text) # usuarios
+DATAPROVA$ctext <- gsub("#[a-zA-Z0-9_\\.]+", "", DATAPROVA$ctext) # Hashtags
+DATAPROVA$ctext <- gsub(" ?(f|ht)(tp)(s?)(://)(.*)[.|/](.*)", "", DATAPROVA$ctext) # urls
 
 
+der <- corpus(DATAPROVA$ctext)
+docvars(der, "id") <- DATAPROVA$status_id
+docvars(der, "Usuario") <- DATAPROVA$screen_name
+docvars(der, "Retweet") <- DATAPROVA$is_retweet
 
+toks <- tokens(der, what = "word",
+               remove_url = T,
+               remove_numbers = T, 
+               remove_punct = T,
+               remove_symbols = T, 
+               remove_separators = T,
+               verbose = quanteda_options("verbose"), 
+               include_docvars = TRUE)
 
-freq_cs <- textstat_frequency(dfm, n = 5, groups = docvars(dfm, 'Usuario'))
-head(freq, 20)
+#minimum 3 characters
+toks <- tokens_remove(toks, min_nchar=3)
+
+head(toks)
 
 ```
 
+colors = c("red", "blue", "white", "brown", "orange", "pink", "blue", "cyan", "yellow", "black", "purple", "gray", "chartreuse","bisque","aquamarine")
